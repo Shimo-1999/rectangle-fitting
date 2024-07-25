@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rectangle Fitting</title>
+  </head>
+  <body>
+    <h1>Rectangle Fitting</h1>
+    <p>画像をアップロードしない場合、デフォルト画像 (parrots.png) が使用されます。</p>
+    <input type="file" id="fileInput" accept="image/*" />
+    <p>
+      <label for="algorithm">アルゴリズムを選択してください:</label>
+      <select id="algorithm">
+        <option value="1">貪欲法</option>
+        <option value="2">焼きなまし法（実装予定）</option>
+      </select>
+    </p>
+    <p>
+      <label for="numRectangles">長方形の数を入力してください:</label>
+      <input type="number" id="numRectangles" value="100" />
+    </p>
+    <p>
+      <button onclick="runSelectedAlgorithm()">実行</button>
+    </p>
+    <hr />
+    <p>
+      <input type="button" id="save_png" value="Save as PNG" />
+      <input type="button" id="save_gif" value="Save as Animation GIF" />
+    </p>
+    <p style="display: flex">
+      <input type="button" id="play" value="▶" style="width: 32px; height: 32px; bottom: 5px; position: relative" />
+      &nbsp;
+      <label>
+        slow
+        <input type="range" id="speed" min="1" max="200" value="50" style="width: 200px" />
+        fast
+      </label>
+      &nbsp;
+      <label>
+        turn:
+        <input type="number" id="turn" value="0" min="0" max="0" style="width: 70px; text-align: right" onchange="update_t(this.value)" />
+      </label>
+    </p>
+    <p>
+      <input type="range" id="t_bar" min="0" max="0" value="0" style="width: 780px" onchange="update_t(this.value)" oninput="update_t(this.value)" />
+    </p>
+    <hr />
+    <div id="result" style="user-select: none">
+    </div>
+    <br />
+    <script src="./gif.js"></script>
+    <script src="./js/script.js" type="module"></script>
+  </body>
+</html>
