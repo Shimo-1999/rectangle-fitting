@@ -27,7 +27,10 @@ async function runSelectedAlgorithm() {
 
   try {
     const imageData = await loadImageData(file);
+    const start = performance.now();
     let ret = run_algorithm(algorithmId, numRectangles, imageData.width, imageData.height, imageData.data);
+    const end = performance.now();
+    console.log(`Execution time: ${end - start} ms`);
     animationData = ret.animation_data;
     document.getElementById("turn").max = ret.max_turn;
     document.getElementById("t_bar").max = ret.max_turn;
