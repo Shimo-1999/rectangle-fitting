@@ -177,7 +177,6 @@ pub fn run_greedy(num_rectangles: usize, width: usize, height: usize, rgb_data: 
         let Rectangle { top, left, bottom, right } = rectangle_split.rectangle;
         let (r_sum, g_sum, b_sum) = rgb_grid.get_sum(top, left, bottom, right);
         let area = ((bottom - top) * (right - left)) as u64;
-        // let fill_color = format!("rgb({},{},{})", (r_sum / area) as u8, (g_sum / area) as u8, (b_sum / area) as u8);
         step.push(Rect {
             x1: left as u16,
             y1: top as u16,
@@ -205,7 +204,6 @@ pub fn run_greedy(num_rectangles: usize, width: usize, height: usize, rgb_data: 
             let Rectangle { top, left, bottom, right } = rectangle_split.rectangle;
             let (r_sum, g_sum, b_sum) = rgb_grid.get_sum(top, left, bottom, right);
             let area = ((bottom - top) * (right - left)) as u64;
-            // let fill_color = format!("rgb({},{},{})", (r_sum / area) as u8, (g_sum / area) as u8, (b_sum / area) as u8);
             step.push(Rect {
                 x1: left as u16,
                 y1: top as u16,

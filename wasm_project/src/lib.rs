@@ -92,7 +92,4 @@ impl Store {
     pub fn step_count(&self) -> u32 {
         self.steps.len() as u32
     }
-
-    pub fn free(self) { /* Drop */
-    }
 }

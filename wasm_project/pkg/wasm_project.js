@@ -149,12 +149,6 @@ export class Store {
         const ret = wasm.store_stepCount(this.__wbg_ptr);
         return ret >>> 0;
     }
-    /**
-    */
-    free() {
-        const ptr = this.__destroy_into_raw();
-        wasm.__wbg_store_free(ptr);
-    }
 }
 
 async function __wbg_load(module, imports) {
