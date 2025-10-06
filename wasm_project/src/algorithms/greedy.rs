@@ -1,7 +1,5 @@
+use crate::Rect;
 use std::collections::BinaryHeap;
-use svg::node::element::Rectangle as SvgRectangle;
-use svg::Document;
-use wasm_bindgen::prelude::*;
 
 struct RGBGrid(Vec<Vec<(u64, u64, u64)>>);
 impl RGBGrid {
@@ -156,15 +154,14 @@ impl PartialOrd for RectangleSplit {
     }
 }
 
-#[wasm_bindgen]
-pub fn run_greedy(num_rectangles: usize, width: usize, height: usize, rgb_data: &[u8]) -> Vec<String> {
+pub fn run_greedy(num_rectangles: usize, width: usize, height: usize, rgb_data: &[u8]) -> Vec<Vec<Rect>> {
     let rgb_data = rgb_data.iter().map(|&x| x as u64).collect::<Vec<u64>>();
     let rgb_squared_data = rgb_data.iter().map(|&x| x * x).collect::<Vec<u64>>();
 
     let rgb_grid = RGBGrid::new(width, height, &rgb_data);
     let rgb_grid_squared = RGBGrid::new(width, height, &rgb_squared_data);
 
-    let mut animation_data = vec![];
+    let mut steps: Vec<Vec<Rect>> = vec![];
 
     let initial_rectangle = Rectangle {
         top: 0,
@@ -175,8 +172,22 @@ pub fn run_greedy(num_rectangles: usize, width: usize, height: usize, rgb_data: 
     let (split_line, cost_decrease) = initial_rectangle.find_best_split(&rgb_grid, &rgb_grid_squared);
     let mut rectangles_heap = BinaryHeap::new();
     rectangles_heap.push(RectangleSplit::new(initial_rectangle, split_line, cost_decrease));
+    let mut step = vec![];
+    for &rectangle_split in rectangles_heap.iter() {
+        let Rectangle { top, left, bottom, right } = rectangle_split.rectangle;
+        let (r_sum, g_sum, b_sum) = rgb_grid.get_sum(top, left, bottom, right);
+        let area = ((bottom - top) * (right - left)) as u64;
+        step.push(Rect {
+            x1: left as u16,
+            y1: top as u16,
+            x2: right as u16,
+            y2: bottom as u16,
+            color: ((r_sum / area) as u32) << 16 | ((g_sum / area) as u32) << 8 | (b_sum / area) as u32,
+        });
+    }
+    steps.push(step);
 
-    while rectangles_heap.len() <= num_rectangles {
+    while rectangles_heap.len() < num_rectangles {
         let RectangleSplit {
             rectangle,
             split_line,
@@ -188,25 +199,20 @@ pub fn run_greedy(num_rectangles: usize, width: usize, height: usize, rgb_data: 
         rectangles_heap.push(RectangleSplit::new(rectangle1, split_line1, cost_decrease1));
         rectangles_heap.push(RectangleSplit::new(rectangle2, split_line2, cost_decrease2));
 
-        let mut svg = Document::new()
-            .set("viewBox", (-5, -5, width + 5, height + 5))
-            .set("width", width)
-            .set("height", height);
+        let mut step = vec![];
         for &rectangle_split in rectangles_heap.iter() {
             let Rectangle { top, left, bottom, right } = rectangle_split.rectangle;
             let (r_sum, g_sum, b_sum) = rgb_grid.get_sum(top, left, bottom, right);
             let area = ((bottom - top) * (right - left)) as u64;
-            let fill_color = format!("rgb({},{},{})", (r_sum / area) as u8, (g_sum / area) as u8, (b_sum / area) as u8);
-            svg = svg.add(
-                SvgRectangle::new()
-                    .set("y", top)
-                    .set("x", left)
-                    .set("height", bottom - top)
-                    .set("width", right - left)
-                    .set("fill", fill_color), // .set("stroke", "black").set("stroke-width", 1),
-            )
+            step.push(Rect {
+                x1: left as u16,
+                y1: top as u16,
+                x2: right as u16,
+                y2: bottom as u16,
+                color: ((r_sum / area) as u32) << 16 | ((g_sum / area) as u32) << 8 | (b_sum / area) as u32,
+            });
         }
-        animation_data.push(svg.to_string());
+        steps.push(step);
     }
-    animation_data
+    steps
 }
