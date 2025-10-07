@@ -119,8 +119,33 @@ jobs:
             echo "No changes."
           fi
 
-      - name: Preview URL
-        run: echo "🔗 https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${PREVIEW_DIR}/"
+      - name: Compute preview URL
+        id: preview
+        run: echo "url=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${PREVIEW_DIR}/" >> $GITHUB_OUTPUT
+
+      - name: Post preview URL as PR comment
+        if: ${{ github.event.pull_request.head.repo.fork == false }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = core.getInput('url');
+            const number = context.payload.pull_request.number;
+            const body = `🚀 **Preview** is ready:\n\n${url}\n\n_This link auto-updates on every push to this PR._`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: number,
+              body
+            });
+          result-encoding: string
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          url: ${{ steps.preview.outputs.url }}
+
+      - name: Write preview URL to job summary
+        run: |
+          echo "### Preview" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.preview.outputs.url }}" >> $GITHUB_STEP_SUMMARY
 
   cleanup-preview:
     if: github.event_name == 'pull_request_target' && github.event.action == 'closed'
