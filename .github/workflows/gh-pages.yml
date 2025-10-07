@@ -1,0 +1,182 @@
+name: Deploy (branch-based GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  contents: read
+  pages: read
+  id-token: none
+
+env:
+  DIST_DIR: dist
+  GH_PAGES_DIR: ghp_worktree
+  PREVIEW_DIR: pr-preview-${{ github.event.pull_request.number }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - uses: jetli/wasm-pack-action@v0.4.0
+
+      - name: Build wasm (target web)
+        working-directory: wasm_project
+        run: wasm-pack build --release --target web
+
+      - name: Prepare dist
+        run: |
+          set -euo pipefail
+          mkdir -p "$DIST_DIR"
+          cp index.html "$DIST_DIR/"
+          cp -r js "$DIST_DIR/js"
+          cp gif.js "$DIST_DIR/gif.js"
+          cp gif.worker.js "$DIST_DIR/gif.worker.js"
+          mkdir -p "$DIST_DIR/wasm_project"
+          cp -r wasm_project/pkg "$DIST_DIR/wasm_project/pkg"
+          if [ -d test/images ]; then
+            mkdir -p "$DIST_DIR/test/images"
+            cp -r test/images/* "$DIST_DIR/test/images/"
+          fi
+          touch "$DIST_DIR/.nojekyll"
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: ${{ env.DIST_DIR }}
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: ${{ env.GH_PAGES_DIR }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: ${{ env.DIST_DIR }}
+
+      - name: Commit prod to gh-pages root
+        run: |
+          set -euo pipefail
+          rsync -a --delete "${DIST_DIR}/" "${GH_PAGES_DIR}/"
+          cd "${GH_PAGES_DIR}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git status --porcelain | grep .; then
+            git add -A
+            git commit -m "deploy: main → gh-pages (prod)"
+            git push
+          else
+            echo "No changes."
+          fi
+
+  deploy-preview:
+    if: github.event_name == 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: ${{ env.GH_PAGES_DIR }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: ${{ env.DIST_DIR }}
+
+      - name: Commit preview to pr subdir
+        run: |
+          set -euo pipefail
+          mkdir -p "${GH_PAGES_DIR}/${PREVIEW_DIR}"
+          rsync -a --delete "${DIST_DIR}/" "${GH_PAGES_DIR}/${PREVIEW_DIR}/"
+          cd "${GH_PAGES_DIR}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git status --porcelain | grep .; then
+            git add -A
+            git commit -m "deploy: preview for PR #${{ github.event.pull_request.number }}"
+            git push
+          else
+            echo "No changes."
+          fi
+
+      - name: Compute preview URL
+        id: preview
+        run: echo "url=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${PREVIEW_DIR}/" >> $GITHUB_OUTPUT
+
+      - name: Post preview URL as PR comment
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = `${{ toJSON(steps.preview.outputs.url) }}`;
+            const number = context.payload.pull_request.number;
+            const body = `🚀 **Preview is ready**\n\n${url}\n\n_This link auto-updates on every push to this PR._`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: number,
+              body
+            });
+
+      - name: Write preview URL to job summary
+        run: |
+          echo "### Preview" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.preview.outputs.url }}" >> $GITHUB_STEP_SUMMARY
+
+  cleanup-preview:
+    if: github.event_name == 'pull_request_target' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: ${{ env.GH_PAGES_DIR }}
+
+      - name: Remove preview dir and push
+        env:
+          PREVIEW_DIR: pr-preview-${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          cd "${GH_PAGES_DIR}"
+          if [ -d "${PREVIEW_DIR}" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git rm -r "${PREVIEW_DIR}"
+            git commit -m "cleanup: preview for PR #${{ github.event.pull_request.number }}"
+            git push
+          else
+            echo "Preview dir not found (already cleaned)."
+          fi
