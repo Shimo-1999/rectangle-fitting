@@ -1,4 +1,4 @@
-import init, { Store } from "./../../wasm/pkg/wasm.js";
+import init, { Store } from "./../wasm/pkg/wasm.js";
 
 // ---------- module-scope state ----------
 const state = {
