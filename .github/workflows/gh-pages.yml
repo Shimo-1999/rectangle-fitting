@@ -43,7 +43,7 @@ jobs:
           mkdir -p dist/wasm_project
           cp -r wasm_project/pkg dist/wasm_project/pkg
           mkdir -p dist/test/images
-          cp -r test/images/* dist/test/images/ || true
+          if [ -d "test/images" ]; then cp -r test/images/* dist/test/images/; else echo "Warning: test/images directory does not exist, skipping image copy."; fi
 
       - name: Upload artifact for Pages
         uses: actions/upload-pages-artifact@v3
