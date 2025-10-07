@@ -83,7 +83,7 @@ jobs:
       - name: Commit prod to gh-pages root
         run: |
           set -euo pipefail
-          rsync -a --delete "${DIST_DIR}/" "${GH_PAGES_DIR}/"
+          rsync -a --delete --exclude ".git" "${DIST_DIR}/" "${GH_PAGES_DIR}/"
           cd "${GH_PAGES_DIR}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
