@@ -9,7 +9,7 @@ on:
     types: [closed]
 
 permissions:
-  contents: write
+  contents: read
   pages: read
   id-token: none
 
@@ -21,6 +21,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -41,18 +43,19 @@ jobs:
 
       - name: Prepare dist
         run: |
-          mkdir -p $DIST_DIR
-          cp index.html $DIST_DIR/
-          cp -r js $DIST_DIR/js
-          cp gif.js $DIST_DIR/gif.js
-          cp gif.worker.js $DIST_DIR/gif.worker.js
-          mkdir -p $DIST_DIR/wasm_project
-          cp -r wasm_project/pkg $DIST_DIR/wasm_project/pkg
+          set -euo pipefail
+          mkdir -p "$DIST_DIR"
+          cp index.html "$DIST_DIR/"
+          cp -r js "$DIST_DIR/js"
+          cp gif.js "$DIST_DIR/gif.js"
+          cp gif.worker.js "$DIST_DIR/gif.worker.js"
+          mkdir -p "$DIST_DIR/wasm_project"
+          cp -r wasm_project/pkg "$DIST_DIR/wasm_project/pkg"
           if [ -d test/images ]; then
-            mkdir -p $DIST_DIR/test/images
-            cp -r test/images/* $DIST_DIR/test/images/
+            mkdir -p "$DIST_DIR/test/images"
+            cp -r test/images/* "$DIST_DIR/test/images/"
           fi
-          touch $DIST_DIR/.nojekyll
+          touch "$DIST_DIR/.nojekyll"
 
       - name: Upload dist
         uses: actions/upload-artifact@v4
@@ -64,6 +67,8 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -77,6 +82,7 @@ jobs:
 
       - name: Commit prod to gh-pages root
         run: |
+          set -euo pipefail
           rsync -a --delete "${DIST_DIR}/" "${GH_PAGES_DIR}/"
           cd "${GH_PAGES_DIR}"
           git config user.name "github-actions[bot]"
@@ -93,6 +99,10 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -106,6 +116,7 @@ jobs:
 
       - name: Commit preview to pr subdir
         run: |
+          set -euo pipefail
           mkdir -p "${GH_PAGES_DIR}/${PREVIEW_DIR}"
           rsync -a --delete "${DIST_DIR}/" "${GH_PAGES_DIR}/${PREVIEW_DIR}/"
           cd "${GH_PAGES_DIR}"
@@ -124,23 +135,19 @@ jobs:
         run: echo "url=https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/${PREVIEW_DIR}/" >> $GITHUB_OUTPUT
 
       - name: Post preview URL as PR comment
-        if: ${{ github.event.pull_request.head.repo.fork == false }}
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         uses: actions/github-script@v7
         with:
           script: |
-            const url = core.getInput('url');
+            const url = `${{ toJSON(steps.preview.outputs.url) }}`;
             const number = context.payload.pull_request.number;
-            const body = `🚀 **Preview** is ready:\n\n${url}\n\n_This link auto-updates on every push to this PR._`;
+            const body = `🚀 **Preview is ready**\n\n${url}\n\n_This link auto-updates on every push to this PR._`;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: number,
               body
             });
-          result-encoding: string
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-        env:
-          url: ${{ steps.preview.outputs.url }}
 
       - name: Write preview URL to job summary
         run: |
@@ -150,6 +157,8 @@ jobs:
   cleanup-preview:
     if: github.event_name == 'pull_request_target' && github.event.action == 'closed'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -160,6 +169,7 @@ jobs:
         env:
           PREVIEW_DIR: pr-preview-${{ github.event.pull_request.number }}
         run: |
+          set -euo pipefail
           cd "${GH_PAGES_DIR}"
           if [ -d "${PREVIEW_DIR}" ]; then
             git config user.name "github-actions[bot]"
