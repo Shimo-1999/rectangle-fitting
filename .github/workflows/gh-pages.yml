@@ -38,22 +38,23 @@ jobs:
       - uses: jetli/wasm-pack-action@v0.4.0
 
       - name: Build wasm (target web)
-        working-directory: wasm_project
+        working-directory: wasm
         run: wasm-pack build --release --target web
 
       - name: Prepare dist
         run: |
           set -euo pipefail
           mkdir -p "$DIST_DIR"
-          cp index.html "$DIST_DIR/"
-          cp -r js "$DIST_DIR/js"
-          cp gif.js "$DIST_DIR/gif.js"
-          cp gif.worker.js "$DIST_DIR/gif.worker.js"
-          mkdir -p "$DIST_DIR/wasm_project"
-          cp -r wasm_project/pkg "$DIST_DIR/wasm_project/pkg"
-          if [ -d test/images ]; then
+          cp web/index.html "$DIST_DIR/"
+          mkdir -p "$DIST_DIR/js"
+          cp -r web/js/* "$DIST_DIR/js/"
+          mkdir -p "$DIST_DIR/vendor"
+          cp -r web/vendor/* "$DIST_DIR/vendor/"
+          mkdir -p "$DIST_DIR/wasm/pkg"
+          cp -r wasm/pkg/* "$DIST_DIR/wasm/pkg/"
+          if [ -d web/test/images ]; then
             mkdir -p "$DIST_DIR/test/images"
-            cp -r test/images/* "$DIST_DIR/test/images/"
+            cp -r web/test/images/* "$DIST_DIR/test/images/"
           fi
           touch "$DIST_DIR/.nojekyll"
 
