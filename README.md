@@ -11,17 +11,12 @@
 - デモ（GitHub Pages）：**[https://shimo-1999.github.io/rectangle-fitting/](https://shimo-1999.github.io/rectangle-fitting/)**
 
 <div align="center">
-  <video
-    src="./docs/demo-ux.mp4"
-    width="480"
-    controls
-    preload="metadata"
-    playsinline
-    muted
-    poster="./docs/assets/demo-parrots.png">
-    お使いのブラウザは video タグに対応していません。
+  <video width="480" controls playsinline muted style="max-width:100%;height:auto">
+    <source src="./docs/demo-ux.mp4" type="video/mp4">
+    <img src="./docs/demo-ux.jpg">
   </video>
 </div>
+
 
 1. 上のデモページにアクセスします。
 2. 左パネルで **画像** を選択し、**長方形の数** を入力します。
