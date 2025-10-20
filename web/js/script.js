@@ -91,9 +91,9 @@ async function onFileChange() {
 }
 
 async function fetchDefaultAsFile() {
-  const resp = await fetch("./test/images/parrots.png");
+  const resp = await fetch("./../docs/assets/images/Parrot.jpg");
   const blob = await resp.blob();
-  return new File([blob], "parrots.png", { type: blob.type });
+  return new File([blob], "Parrot.jpg", { type: blob.type });
 }
 
 async function onRunClick() {
@@ -115,7 +115,7 @@ async function runPipeline(file) {
     const { width, height, rgba } = await decodeToRGBA(file);
     state.srcSize = { width, height };
 
-    const numRects = Number(els.numRects?.value || 100);
+    const numRects = Number(els.numRects?.value || 1000);
     const algoId = Number(els.algo?.value || 1);
 
     const rgbaView = new Uint8Array(rgba.buffer, rgba.byteOffset, rgba.byteLength);
@@ -202,7 +202,7 @@ function stopPlay() {
 
 function loop(now) {
   if (state.isPlaying && state.hasResult) {
-    const fps = Number(els.speed.value || 30);
+    const fps = Number(els.speed.value || 100);
     const interval = 1000 / Math.max(1, fps); // ms/step
 
     const dt = now - state.prevTime;
