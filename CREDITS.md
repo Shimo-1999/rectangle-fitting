@@ -1,6 +1,6 @@
 # クレジット（画像・動画）
 
-## Parrot.jpg（`docs/assets/images/Parrot.jpg`）
+## Parrot.jpg（`web/assets/images/Parrot.jpg`）
 - 作者：**Contributor50**（Wikimedia Commons ユーザー）
 - 出典：https://commons.wikimedia.org/wiki/File:Parrot.jpg
 - ライセンス：**CC BY-SA 4.0**（https://creativecommons.org/licenses/by-sa/4.0/）

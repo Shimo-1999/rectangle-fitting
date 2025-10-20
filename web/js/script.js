@@ -91,7 +91,7 @@ async function onFileChange() {
 }
 
 async function fetchDefaultAsFile() {
-  const resp = await fetch("./../docs/assets/images/Parrot.jpg");
+  const resp = await fetch("./assets/images/Parrot.jpg");
   const blob = await resp.blob();
   return new File([blob], "Parrot.jpg", { type: blob.type });
 }

@@ -1,4 +1,6 @@
-This repository includes media licensed under the Creative Commons Attribution-ShareAlike 4.0 International License.
+This repository includes media licensed under CC BY-SA 4.0.
+Demo GIFs are under docs/assets/gifs/. Original images used by the web app are under web/assets/images/.
+The CC BY-SA terms apply to all media listed in CREDITS.md, regardless of location.
 Full legalcode follows (verbatim from Creative Commons).
 https://creativecommons.org/licenses/by-sa/4.0/
 

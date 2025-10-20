@@ -4,7 +4,7 @@
 
 | 元画像                                                             | 貪欲法の可視化アニメーション                                   |
 | ------------------------------------------------------------------ | -------------------------------------------------------------- |
-| <img src="./docs/assets/images/Parrot.jpg" alt="元画像" width="360"> | <img src="./docs/assets/gifs/parrot_greedy.gif" alt="貪欲法の可視化" width="360"> |
+| <img src="./web/assets/images/Parrot.jpg" alt="元画像" width="360"> | <img src="./docs/assets/gifs/parrot_greedy.gif" alt="貪欲法の可視化" width="360"> |
 
 ## 使い方
 
@@ -67,8 +67,13 @@ python -m http.server
 
 ## ライセンス
 
-- **コード**：**MIT License**（`LICENSE` を参照）
-- **メディア（デモ用画像・動画）**：**CC BY-SA 4.0**（`CREDITS.md` および `assets/licenses/` を参照）
+- **コード**：**MIT License**（[`LICENSE`](./LICENSE) を参照）
+- **メディア（デモ用画像・動画/GIF）**：**CC BY-SA 4.0**  
+  詳細は [`CREDITS.md`](./CREDITS.md) および [`docs/assets/licenses/CC-BY-SA-4.0.txt`](./docs/assets/licenses/CC-BY-SA-4.0.txt)を参照
+
+### メディア配置
+- 画像（デモ用画像）：`web/assets/images/`
+- GIF（README 用）：`docs/assets/gifs/`
 
 ## 参考資料 / 謝辞
 
