@@ -4,19 +4,19 @@
 
 | 元画像                                                             | 貪欲法の可視化アニメーション                                   |
 | ------------------------------------------------------------------ | -------------------------------------------------------------- |
-| <img src="./web/test/images/parrots.png" alt="元画像" width="360"> | <img src="./docs/greedy.gif" alt="貪欲法の可視化" width="360"> |
+| <img src="./docs/assets/images/Parrot.jpg" alt="元画像" width="360"> | <img src="./docs/assets/gifs/parrot_greedy.gif" alt="貪欲法の可視化" width="360"> |
 
 ## 使い方
 
 - デモ（GitHub Pages）：**[https://shimo-1999.github.io/rectangle-fitting/](https://shimo-1999.github.io/rectangle-fitting/)**
 
 <p align="center">
-  <img src="./docs/demo-ux.gif" alt="Web アプリ画面" width="480">
+  <img src="./docs/assets/gifs/parrot_demo_ux.gif" alt="Web アプリ画面" width="480">
 </p>
 
 1. 上のデモページにアクセスします。
 2. 左パネルで **画像** を選択し、**長方形の数** を入力します。
-3. **実行** を押します（画像未選択時は `parrots.png` で実行）。
+3. **実行** を押します（画像未選択時は `Parrot.jpg` で実行）。
 4. 右パネルで **再生**／**PNG 保存**／**GIF 保存**／**PNG 全保存（ZIP）** が利用できます。
 
 > **注意**
@@ -65,9 +65,10 @@ python -m http.server
 # → http://localhost:8000/web/ にアクセス
 ```
 
-## 出典
+## ライセンス
 
-- テスト画像：**Kodak image dataset #23**（出典：https://r0k.us/graphics/kodak ）
+- **コード**：**MIT License**（`LICENSE` を参照）
+- **メディア（デモ用画像・動画）**：**CC BY-SA 4.0**（`CREDITS.md` および `assets/licenses/` を参照）
 
 ## 参考資料 / 謝辞
 
