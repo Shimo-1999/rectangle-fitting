@@ -1,5 +1,13 @@
 import init, { Store } from "./../wasm/pkg/wasm.js";
 
+// ---------- limits & notice helpers ----------
+const LIMITS = {
+  IMG_MAX_BYTES: 15 * 1024 * 1024,  // 15MB
+  RECT_MAX_INPUT: 5000,
+  IMG_MAX_PIXELS: 20_000_000,
+  IMG_MAX_SIDE: 8192,
+};
+
 // ---------- module-scope state ----------
 const state = {
   store: null, // wasm Store
@@ -57,6 +65,40 @@ window.addEventListener("DOMContentLoaded", async () => {
   requestAnimationFrame(loop);
 });
 
+function hasActiveWarn() {
+  return !!els.notice?.querySelector(".alert");
+}
+
+function syncRunButtonWithWarn() {
+  if (els.runBtn) els.runBtn.disabled = hasActiveWarn();
+}
+
+function showWarn(msg, variant = "warning") {
+  const box = els.notice; if (!box) return;
+  box.classList.remove("d-none");
+  box.innerHTML = "";
+  box.insertAdjacentHTML("beforeend", `
+    <div class="alert alert-${variant} alert-dismissible fade show" role="alert">
+      <div>${msg}</div>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="閉じる"></button>
+    </div>
+  `);
+  syncRunButtonWithWarn();
+
+  const alertEl = box.querySelector(".alert:last-child");
+  alertEl?.addEventListener("closed.bs.alert", () => {
+    if (!hasActiveWarn()) box.classList.add("d-none");
+    syncRunButtonWithWarn();
+  });
+}
+
+function clearWarn() {
+  const box = els.notice; if (!box) return;
+  box.innerHTML = "";
+  box.classList.add("d-none");
+  syncRunButtonWithWarn();
+}
+
 // ---------- UI toggles ----------
 function setResultReady(on) {
   state.hasResult = on;
@@ -89,7 +131,61 @@ async function onFileChange() {
   resetControls();
   clearStage();
   state.store.clear();
+
+  const file = els.fileInput.files?.[0];
+  if (!file) {
+    clearWarn();
+    return;
+  }
+
+  if (file.size > LIMITS.IMG_MAX_BYTES) {
+    els.fileInput.value = "";
+    showWarn(
+      `ファイルが大きすぎます（${(file.size/1024/1024).toFixed(1)}MB）。` +
+      `上限は ${(LIMITS.IMG_MAX_BYTES/1024/1024)}MB です。`,
+      "warning"
+    );
+    return;
+  }
+
+  try {
+    const bmp = await createImageBitmap(file);
+    const w = bmp.width, h = bmp.height;
+    bmp.close?.();
+
+    if (Number.isFinite(LIMITS.IMG_MAX_PIXELS)) {
+      const px = w * h;
+      if (px > LIMITS.IMG_MAX_PIXELS) {
+        els.fileInput.value = "";
+        showWarn(
+          `解像度が大きすぎます（${w}×${h} ≈ ${(px/1e6).toFixed(1)}MP）。` +
+          `上限は ${(LIMITS.IMG_MAX_PIXELS/1e6)}MP です。`,
+          "warning"
+        );
+        return;
+      }
+    }
+    if (Number.isFinite(LIMITS.IMG_MAX_SIDE)) {
+      const sideMax = LIMITS.IMG_MAX_SIDE;
+      if (Math.max(w, h) > sideMax) {
+        els.fileInput.value = "";
+        showWarn(
+          `一辺が大きすぎます（${w}×${h}）。` +
+          `上限は ${sideMax}px です。`,
+          "warning"
+        );
+        return;
+      }
+    }
+  } catch (e) {
+    els.fileInput.value = "";
+    showWarn("画像の読み込みに失敗しました。別のファイルをお試しください。", "danger");
+    return;
+  }
+
+  clearWarn();
 }
+
 
 async function fetchDefaultAsFile() {
   const resp = await fetch("./assets/images/Parrot.jpg");
