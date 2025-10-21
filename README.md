@@ -69,7 +69,7 @@ python -m http.server
 
 - **コード**：**MIT License**（[`LICENSE`](./LICENSE) を参照）
 - **メディア（デモ用画像・動画/GIF）**：**CC BY-SA 4.0**  
-  詳細は [`CREDITS.md`](./CREDITS.md) および [`docs/assets/licenses/CC-BY-SA-4.0.txt`](./docs/assets/licenses/LICENSE-CC-BY-SA-4.0.txt)を参照
+  詳細は [`CREDITS.md`](./CREDITS.md) および [`docs/assets/licenses/LICENSE-CC-BY-SA-4.0.txt`](./docs/assets/licenses/LICENSE-CC-BY-SA-4.0.txt)を参照
 
 ### メディア配置
 - 画像（デモ用画像）：`web/assets/images/`
