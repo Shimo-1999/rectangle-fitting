@@ -16,6 +16,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // cache DOM
   els = {
+    notice: document.getElementById("notice"),
     fileInput: document.getElementById("fileInput"),
     algo: document.getElementById("algorithm"),
     numRects: document.getElementById("numRectangles"),
