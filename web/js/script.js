@@ -45,6 +45,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     speed: document.getElementById("speed"),
   };
 
+  els.numRects?.setAttribute("max", String(LIMITS.RECT_MAX_INPUT));
+  els.numRects?.setAttribute("min", "1");
+
+  els.numRects?.addEventListener("input", clampRectCount);
+  els.numRects?.addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
+
   // events
   els.fileInput.addEventListener("change", onFileChange);
   els.runBtn?.addEventListener("click", onRunClick);
@@ -97,6 +103,18 @@ function clearWarn() {
   box.innerHTML = "";
   box.classList.add("d-none");
   syncRunButtonWithWarn();
+}
+
+// ---------- clamp helper ----------
+function clampRectCount() {
+  if (!els.numRects) return;
+  const max = LIMITS.RECT_MAX_INPUT;
+  const min = 1;
+  let v = parseInt(els.numRects.value, 10);
+  if (!Number.isFinite(v)) v = min;
+  if (v < min) v = min;
+  if (v > max) v = max;
+  els.numRects.value = String(v);
 }
 
 // ---------- UI toggles ----------
@@ -212,7 +230,7 @@ async function runPipeline(file) {
     const { width, height, rgba } = await decodeToRGBA(file);
     state.srcSize = { width, height };
 
-    const numRects = Number(els.numRects?.value || 1000);
+    const numRects = Number(els.numRects?.value || 500);
     const algoId = Number(els.algo?.value || 1);
 
     const rgbaView = new Uint8Array(rgba.buffer, rgba.byteOffset, rgba.byteLength);
@@ -318,7 +336,6 @@ function loop(now) {
 }
 
 // ========== Save （PNG / GIF） ==========
-
 async function onSavePng() {
   if (!state.store || !state.hasResult) return;
   try {
@@ -447,7 +464,6 @@ async function drawSvgOntoCanvas(svgString, canvas, { background = null } = {}) 
     URL.revokeObjectURL(url);
   }
 }
-
 
 function parseSvgSize(svgString) {
   const m = svgString.match(/viewBox\s*=\s*["']\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*["']/i);
