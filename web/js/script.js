@@ -1,5 +1,13 @@
 import init, { Store } from "./../wasm/pkg/wasm.js";
 
+// ---------- limits & notice helpers ----------
+const LIMITS = {
+  IMG_MAX_BYTES: 15 * 1024 * 1024,  // 15MB
+  RECT_MAX_INPUT: 5000,
+  IMG_MAX_PIXELS: 20_000_000,
+  IMG_MAX_SIDE: 8192,
+};
+
 // ---------- module-scope state ----------
 const state = {
   store: null, // wasm Store
@@ -16,6 +24,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // cache DOM
   els = {
+    notice: document.getElementById("notice"),
     fileInput: document.getElementById("fileInput"),
     algo: document.getElementById("algorithm"),
     numRects: document.getElementById("numRectangles"),
@@ -36,6 +45,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     speed: document.getElementById("speed"),
   };
 
+  els.numRects?.setAttribute("max", String(LIMITS.RECT_MAX_INPUT));
+  els.numRects?.setAttribute("min", "1");
+
+  els.numRects?.addEventListener("input", clampRectCount);
+  els.numRects?.addEventListener("wheel", (e) => e.preventDefault(), { passive: false });
+
   // events
   els.fileInput.addEventListener("change", onFileChange);
   els.runBtn?.addEventListener("click", onRunClick);
@@ -55,6 +70,52 @@ window.addEventListener("DOMContentLoaded", async () => {
   resetControls();
   requestAnimationFrame(loop);
 });
+
+function hasActiveWarn() {
+  return !!els.notice?.querySelector(".alert");
+}
+
+function syncRunButtonWithWarn() {
+  if (els.runBtn) els.runBtn.disabled = hasActiveWarn();
+}
+
+function showWarn(msg, variant = "warning") {
+  const box = els.notice; if (!box) return;
+  box.classList.remove("d-none");
+  box.innerHTML = "";
+  box.insertAdjacentHTML("beforeend", `
+    <div class="alert alert-${variant} alert-dismissible fade show" role="alert">
+      <div>${msg}</div>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="閉じる"></button>
+    </div>
+  `);
+  syncRunButtonWithWarn();
+
+  const alertEl = box.querySelector(".alert:last-child");
+  alertEl?.addEventListener("closed.bs.alert", () => {
+    if (!hasActiveWarn()) box.classList.add("d-none");
+    syncRunButtonWithWarn();
+  });
+}
+
+function clearWarn() {
+  const box = els.notice; if (!box) return;
+  box.innerHTML = "";
+  box.classList.add("d-none");
+  syncRunButtonWithWarn();
+}
+
+// ---------- clamp helper ----------
+function clampRectCount() {
+  if (!els.numRects) return;
+  const max = LIMITS.RECT_MAX_INPUT;
+  const min = 1;
+  let v = parseInt(els.numRects.value, 10);
+  if (!Number.isFinite(v)) v = min;
+  if (v < min) v = min;
+  if (v > max) v = max;
+  els.numRects.value = String(v);
+}
 
 // ---------- UI toggles ----------
 function setResultReady(on) {
@@ -88,7 +149,61 @@ async function onFileChange() {
   resetControls();
   clearStage();
   state.store.clear();
+
+  const file = els.fileInput.files?.[0];
+  if (!file) {
+    clearWarn();
+    return;
+  }
+
+  if (file.size > LIMITS.IMG_MAX_BYTES) {
+    els.fileInput.value = "";
+    showWarn(
+      `ファイルが大きすぎます（${(file.size/1024/1024).toFixed(1)}MB）。` +
+      `上限は ${(LIMITS.IMG_MAX_BYTES/1024/1024)}MB です。`,
+      "warning"
+    );
+    return;
+  }
+
+  try {
+    const bmp = await createImageBitmap(file);
+    const w = bmp.width, h = bmp.height;
+    bmp.close?.();
+
+    if (Number.isFinite(LIMITS.IMG_MAX_PIXELS)) {
+      const px = w * h;
+      if (px > LIMITS.IMG_MAX_PIXELS) {
+        els.fileInput.value = "";
+        showWarn(
+          `解像度が大きすぎます（${w}×${h} ≈ ${(px/1e6).toFixed(1)}MP）。` +
+          `上限は ${(LIMITS.IMG_MAX_PIXELS/1e6)}MP です。`,
+          "warning"
+        );
+        return;
+      }
+    }
+    if (Number.isFinite(LIMITS.IMG_MAX_SIDE)) {
+      const sideMax = LIMITS.IMG_MAX_SIDE;
+      if (Math.max(w, h) > sideMax) {
+        els.fileInput.value = "";
+        showWarn(
+          `一辺が大きすぎます（${w}×${h}）。` +
+          `上限は ${sideMax}px です。`,
+          "warning"
+        );
+        return;
+      }
+    }
+  } catch (e) {
+    els.fileInput.value = "";
+    showWarn("画像の読み込みに失敗しました。別のファイルをお試しください。", "danger");
+    return;
+  }
+
+  clearWarn();
 }
+
 
 async function fetchDefaultAsFile() {
   const resp = await fetch("./assets/images/Parrot.jpg");
@@ -115,7 +230,7 @@ async function runPipeline(file) {
     const { width, height, rgba } = await decodeToRGBA(file);
     state.srcSize = { width, height };
 
-    const numRects = Number(els.numRects?.value || 1000);
+    const numRects = Number(els.numRects?.value || 500);
     const algoId = Number(els.algo?.value || 1);
 
     const rgbaView = new Uint8Array(rgba.buffer, rgba.byteOffset, rgba.byteLength);
@@ -221,7 +336,6 @@ function loop(now) {
 }
 
 // ========== Save （PNG / GIF） ==========
-
 async function onSavePng() {
   if (!state.store || !state.hasResult) return;
   try {
@@ -350,7 +464,6 @@ async function drawSvgOntoCanvas(svgString, canvas, { background = null } = {}) 
     URL.revokeObjectURL(url);
   }
 }
-
 
 function parseSvgSize(svgString) {
   const m = svgString.match(/viewBox\s*=\s*["']\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*["']/i);
