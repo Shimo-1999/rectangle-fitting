@@ -52,9 +52,9 @@ jobs:
           cp -r web/vendor/* "$DIST_DIR/vendor/"
           mkdir -p "$DIST_DIR/wasm/pkg"
           cp -r wasm/pkg/* "$DIST_DIR/wasm/pkg/"
-          if [ -d web/test/images ]; then
-            mkdir -p "$DIST_DIR/test/images"
-            cp -r web/test/images/* "$DIST_DIR/test/images/"
+          if [ -d web/assets/images ]; then
+            mkdir -p "$DIST_DIR/assets/images"
+            cp -r web/assets/images/* "$DIST_DIR/assets/images/"
           fi
           touch "$DIST_DIR/.nojekyll"
 
