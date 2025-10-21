@@ -162,8 +162,32 @@
   </main>
 
   <footer class="container-xxl my-5 text-center text-muted small">
-    <span>© 2025 Rectangle Fitting by <a href="https://github.com/Shimo-1999" target="_blank" rel="noopener">Shimo-1999</a></span>
+  <span>© 2025 Rectangle Fitting by
+    <a href="https://github.com/Shimo-1999" target="_blank" rel="noopener">Shimo-1999</a>
+  </span>
+  ·
+  <a href="#" data-bs-toggle="modal" data-bs-target="#tosModal">注意 / 免責事項</a>
   </footer>
+
+  <div class="modal fade" id="tosModal" tabindex="-1" aria-labelledby="tosLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 id="tosLabel" class="modal-title">注意 / 免責事項</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+        </div>
+        <div class="modal-body small text-start">
+          <p><strong>注意</strong><br>
+          画像サイズや解像度が大きい場合、ブラウザや端末のメモリ使用量が増加し、フリーズやクラッシュが発生することがあります。作業中のデータは事前に保存し、十分な電源と余裕のある環境でご利用ください。</p>
+          <p><strong>免責事項</strong><br>
+          本アプリの利用に関連して発生した損害について、開発者は一切の責任を負いません。</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5/dist/js/bootstrap.bundle.min.js"></script>
   <script src="./vendor/gif.js"></script>
