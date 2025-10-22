@@ -43,6 +43,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     tBar: document.getElementById("t_bar"),
     turn: document.getElementById("turn"),
     speed: document.getElementById("speed"),
+    strokeWidth: document.getElementById("strokeWidth"),
   };
 
   els.numRects?.setAttribute("max", String(LIMITS.RECT_MAX_INPUT));
@@ -58,6 +59,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   els.playBtn.addEventListener("click", togglePlay);
   els.tBar.addEventListener("input", () => seek(Number(els.tBar.value)));
   els.turn.addEventListener("input", () => seek(Number(els.turn.value)));
+  els.strokeWidth.addEventListener("input", () => {
+    const step = Number(els.turn.value) || 1;
+    renderStep(step);
+  });
 
   // save handlers
   els.savePng.addEventListener("click", onSavePng);
@@ -290,7 +295,7 @@ function seek(step) {
 
 function renderStep(step) {
   if (!state.store) return;
-  const svg = state.store.visSvg(step);
+  const svg = state.store.visSvg(step, Number(els.strokeWidth.value));
   els.stage.innerHTML = svg;
 }
 
@@ -340,7 +345,7 @@ async function onSavePng() {
   if (!state.store || !state.hasResult) return;
   try {
     const step = Number(els.turn.value) || 0;
-    const svg = state.store.visSvg(step);
+    const svg = state.store.visSvg(step, Number(els.strokeWidth.value));
 
     const { canvas } = await svgToCanvas(svg, { scale: 1, background: "#ffffff" });
     const blob = await canvasToBlob(canvas, "image/png");
@@ -371,7 +376,7 @@ async function onSaveGif() {
     const delay = Math.round((step * 2000) / speedValue);
     const lastDelay = 3000;
 
-    const firstSvg = state.store.visSvg(1);
+    const firstSvg = state.store.visSvg(1, Number(els.strokeWidth.value));
     const { canvas } = await svgToCanvas(firstSvg, { background: "#ffffff" });
 
     const gif = new GIF({
@@ -385,7 +390,7 @@ async function onSaveGif() {
     gif.on("progress", p => { btn.innerHTML = `GIF ${Math.round(p * 100)}%`; });
 
     const addFrame = async (s, d) => {
-      const svg = state.store.visSvg(s);
+      const svg = state.store.visSvg(s, Number(els.strokeWidth.value));
       await drawSvgOntoCanvas(svg, canvas, { background: "#ffffff" });
       gif.addFrame(canvas, { copy: true, delay: d });
     };
@@ -508,7 +513,7 @@ async function onSaveFramesZip() {
 
   try {
     const max = Number(els.turn.max) || 1;
-    const firstSvg = state.store.visSvg(1);
+    const firstSvg = state.store.visSvg(1, Number(els.strokeWidth.value));
     const { canvas } = await svgToCanvas(firstSvg, { background: "#fff" });
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     ctx.imageSmoothingEnabled = false;
@@ -520,7 +525,7 @@ async function onSaveFramesZip() {
     const pad = String(max).length;
 
     for (let s = 1; s <= max; s++) {
-      const svg = state.store.visSvg(s);
+      const svg = state.store.visSvg(s, Number(els.strokeWidth.value));
       await drawSvgOntoCanvas(svg, canvas, { background: "#fff" });
       const blob = await canvasToBlob(canvas, "image/png");
       const filename = `frame_${String(s).padStart(pad, "0")}.png`;

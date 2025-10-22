@@ -124,14 +124,15 @@ export class Store {
     }
     /**
     * @param {number} step
+    * @param {number} stroke_width
     * @returns {string}
     */
-    visSvg(step) {
+    visSvg(step, stroke_width) {
         let deferred1_0;
         let deferred1_1;
         try {
             const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-            wasm.store_visSvg(retptr, this.__wbg_ptr, step);
+            wasm.store_visSvg(retptr, this.__wbg_ptr, step, stroke_width);
             var r0 = getInt32Memory0()[retptr / 4 + 0];
             var r1 = getInt32Memory0()[retptr / 4 + 1];
             deferred1_0 = r0;

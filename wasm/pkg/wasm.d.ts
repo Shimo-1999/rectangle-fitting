@@ -23,9 +23,10 @@ export class Store {
   runAlgorithmWithImage(algorithm_id: number, num_rectangles: number, rgba: Uint8Array): void;
 /**
 * @param {number} step
+* @param {number} stroke_width
 * @returns {string}
 */
-  visSvg(step: number): string;
+  visSvg(step: number, stroke_width: number): string;
 /**
 * @returns {number}
 */
@@ -41,7 +42,7 @@ export interface InitOutput {
   readonly store_clear: (a: number) => void;
   readonly store_init: (a: number, b: number, c: number) => void;
   readonly store_runAlgorithmWithImage: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-  readonly store_visSvg: (a: number, b: number, c: number) => void;
+  readonly store_visSvg: (a: number, b: number, c: number, d: number) => void;
   readonly store_stepCount: (a: number) => number;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
