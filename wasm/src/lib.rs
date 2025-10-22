@@ -57,7 +57,7 @@ impl Store {
     }
 
     #[wasm_bindgen(js_name = visSvg)]
-    pub fn vis_svg(&self, step: u32) -> String {
+    pub fn vis_svg(&self, step: u32, stroke_width: f32) -> String {
         use svg::node::element::{Group, Rectangle as SvgRect};
         use svg::Document;
 
@@ -76,12 +76,15 @@ impl Store {
 
         let mut g = Group::new().set("shape-rendering", "crispEdges");
         for r in frame {
-            let rect = SvgRect::new()
+            let mut rect = SvgRect::new()
                 .set("x", r.x1 as i32)
                 .set("y", r.y1 as i32)
                 .set("width", (r.x2 - r.x1) as i32)
                 .set("height", (r.y2 - r.y1) as i32)
                 .set("fill", format!("#{:06X}", r.color & 0x00_FF_FF_FF));
+            if stroke_width > 0.0 {
+                rect = rect.set("stroke", "#000000").set("stroke-width", stroke_width);
+            }
             g = g.add(rect);
         }
         doc = doc.add(g);
